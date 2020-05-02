@@ -2,10 +2,28 @@ import pygame as pg
 
 from header import *
 from widget import *
-from utils import load_state, save_state
 
-# TODO: refactor pinned list into a class
-# TODO: add functionality to write on blackboard (with Chalk class)
+def load_bb(file):
+    ret = []
+    with open(file, "r") as f:
+        for line in f:
+            args = line.split(',')
+            if len(args) == 3:
+                ret.append((args[0], int(args[1]), int(args[2])))
+            elif len(args) == 5:
+                ret.append((args[0], int(args[1]), int(args[2]), int(args[3]), int(args[4])))
+    return ret
+
+def save_bb(file, items):
+    with open(file, "w") as f:
+        for item in items:
+            if isinstance(item, Chalk) and item.text != '':
+                args = item.text + "," + str(item.x) + "," + str(item.y) + "\n"
+            elif isinstance(item, App):
+                args = str(item.path) + "," + str(item.x) + "," + str(item.y) + "," + str(item.w) + "," + str(item.h) + "\n"
+            f.write(args)
+
+
 if __name__ == '__main__':
     # app window
     pg.init()
@@ -17,13 +35,7 @@ if __name__ == '__main__':
     
     # instantiate objects
     clock = pg.time.Clock()
-    searchbar = SearchBar(20, 15, "Search Here...")
-    pin_se = pg.mixer.Sound(APP_SOUND_EFFECT)
-    # load in state
-    pinned = []
-    items = load_state(SAVEFILE)
-    for args in items:
-        pinned.append(App(*args))
+    bb = BlackBoard(load_bb(SAVEFILE))
 
     # program loop
     running = True
@@ -32,40 +44,17 @@ if __name__ == '__main__':
             # [X] to close UIbb
             if event.type == pg.QUIT:
                 running = False
-            # pinned apps events
-            remove_idx = []
-            for i in range(len(pinned)):
-                keep = pinned[i].handle_event(event)
-                if not keep:
-                    remove_idx.append(i)
-            for i in sorted(remove_idx, reverse=True):
-                del pinned[i]
-            # search bar events
-            searchbar.handle_event(event)
-        
-        # instantiate any newly pinned apps
-        new = searchbar.get_search_results()
-        for path in new:
-            pin_se.play()
-            new_pin = App(path, 50, 50, APP_WIDTH, APP_HEIGHT)
-            pinned.append(new_pin)
-        
+            bb.handle_event(event)
+                
         # refresh screen
         screen.fill(BACKGROUND_COLOR)
         pg.draw.rect(screen, BORDER_COLOR, screen_border, 25)
-        # update and re-draw pinned apps
-        for app in pinned:
-            app.update()
-            app.draw(screen)
-        for app in pinned:
-            app.draw_img(screen)
-        # update and re-draw search bar
-        searchbar.update()
-        searchbar.draw(screen)
+        # re-draw blackboard
+        bb.draw(screen)
         # update display
         pg.display.update()
         clock.tick(FPS)
 
-    # program exit, save state
-    save_state(SAVEFILE, pinned)
+    # program exit, save blackboard
+    save_bb(SAVEFILE, bb.items)
     pg.quit()

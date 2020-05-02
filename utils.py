@@ -1,21 +1,6 @@
-from pathlib import Path
 from PIL import Image
 from win32com.shell import shell, shellcon
 import win32api, win32con, win32ui, win32gui, os
-
-def load_state(file):
-    ret = []
-    with open(file, "r") as f:
-        for line in f:
-            args = line.split(',')
-            ret.append((args[0], int(args[1]), int(args[2]), int(args[3]), int(args[4])))
-    return ret
-
-def save_state(file, pinned):
-    with open(file, "w") as f:
-        for app in pinned:
-            args = str(app.path) + "," + str(app.x) + "," + str(app.y) + "," + str(app.w) + "," + str(app.h) +"\n"
-            f.write(args)
 
 # code modified from https://stackoverflow.com/questions/21070423/
 def get_icon(PATH, size):
