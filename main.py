@@ -4,6 +4,8 @@ from header import *
 from widget import *
 from utils import load_state, save_state
 
+# TODO: refactor pinned list into a class
+# TODO: add functionality to write on blackboard (with Chalk class)
 if __name__ == '__main__':
     # app window
     pg.init()
@@ -17,15 +19,19 @@ if __name__ == '__main__':
     clock = pg.time.Clock()
     searchbar = SearchBar(20, 15, "Search Here...")
     pin_se = pg.mixer.Sound(APP_SOUND_EFFECT)
+    # load in state
+    pinned = []
+    items = load_state(SAVEFILE)
+    for args in items:
+        pinned.append(App(*args))
 
-    pinned = load_state(SAVEFILE)
+    # program loop
     running = True
     while running:
         for event in pg.event.get():
             # [X] to close UIbb
             if event.type == pg.QUIT:
                 running = False
-
             # pinned apps events
             remove_idx = []
             for i in range(len(pinned)):
@@ -60,5 +66,6 @@ if __name__ == '__main__':
         pg.display.update()
         clock.tick(FPS)
 
+    # program exit, save state
     save_state(SAVEFILE, pinned)
     pg.quit()

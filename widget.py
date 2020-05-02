@@ -1,25 +1,23 @@
 import pygame as pg
 from PyQt5.QtWidgets import QApplication, QDialog, QListWidget, QVBoxLayout
-from PIL import Image
-from win32com.shell import shell, shellcon
 from pathlib import Path
 from threading import Thread
-import win32api, win32con, win32ui, win32gui
 import os, sys
 
 from header import *
+from utils import get_icon
 
 class SearchBar:
     def __init__(self, x, y, text):
-        self.color = pg.Color(*SEARCHBAR_COLOR)
-        self.font = pg.font.Font(*SEARCHBAR_FONT)
+        self.color = pg.Color(*CHALK_COLOR)
+        self.font = pg.font.Font(*CHALK_FONT)
         self.default_text = text
         self.text = text
         self.active = False
         self.results = []
 
         self.text_surface = self.font.render(text, True, self.color)
-        self.rect = pg.Rect(x, y, self.text_surface.get_width()+10, 30)
+        self.rect = pg.Rect(x, y, self.text_surface.get_width() + 10, CHALK_FONT[1])
     
     def handle_event(self, event):
         if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
@@ -157,41 +155,40 @@ class App:
         screen.blit(self.img, (self.x + APP_WIDTH//2.5, self.y-25))
 
 
-# code modified from https://stackoverflow.com/questions/21070423/
-def get_icon(PATH, size):
-    norm_path = os.path.abspath(PATH)
+class Chalk():
+    def __init__(self, x, y):
+        self.font = pg.font.Font(*CHALK_FONT)
+        self.color = pg.Color(*CHALK_COLOR)
+        self.active = True
+        self.text = ''
 
-    SHGFI_ICON = 0x000000100
-    SHGFI_ICONLOCATION = 0x000001000
-    if size == "small":
-        SHIL_SIZE = 0x00001
-    elif size == "large":
-        SHIL_SIZE = 0x00002
-    else:
-        raise TypeError("Invalid argument for 'size'. Must be equal to 'small' or 'large'")
+        self.text_surface = self.font.render(text, True, self.color)
+        self.rect = pg.Rect(x, y, self.text_surface.get_width() + 10, CHALK_FONT[1])
 
-    ret, info = shell.SHGetFileInfo(norm_path, 0, SHGFI_ICONLOCATION | SHGFI_ICON | SHIL_SIZE)
-    hIcon, iIcon, dwAttr, name, typeName = info
-    ico_x = win32api.GetSystemMetrics(win32con.SM_CXICON)
-    hdc = win32ui.CreateDCFromHandle(win32gui.GetDC(0))
-    hbmp = win32ui.CreateBitmap()
-    hbmp.CreateCompatibleBitmap(hdc, ico_x, ico_x)
-    hdc = hdc.CreateCompatibleDC()
-    hdc.SelectObject(hbmp)
-    hdc.DrawIcon((0, 0), hIcon)
-    win32gui.DestroyIcon(hIcon)
+    def handle_event(self, event):
+        if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+            if self.rect.collidepoint(event.pos):
+                self.active = not self.active
+            else:
+                self.active = False
+        
+        if self.active and event.type == pg.KEYDOWN:
+            # {ENTER} to finish writing
+            if event.key == pg.K_RETURN:
+                self.active = False
+            # {BACKSPACE} removes 1 char
+            elif event.key == pg.K_BACKSPACE:
+                self.text = self.text[:-1]
+            # {ESC} erases the chalk
+            elif event.key == pg.K_ESCAPE:
+                self.text = ''
+            # typing char
+            else:
+                self.text += event.unicode
+            self.text_surface = self.font.render(self.text, True, self.color)
 
-    bmpinfo = hbmp.GetInfo()
-    bmpstr = hbmp.GetBitmapBits(True)
+    def update(self):
+        self.rect.width = self.text_surface.get_width() + 10
 
-    bmpinfo = hbmp.GetInfo()
-    bmpstr = hbmp.GetBitmapBits(True)
-    img = Image.frombuffer(
-        "RGBA",
-        (bmpinfo["bmWidth"], bmpinfo["bmHeight"]),
-        bmpstr, "raw", "BGRA", 0, 1
-    )
-
-    if size == "small":
-        img = img.resize((16, 16), Image.ANTIALIAS)
-    return img
+    def draw(self, screen):
+        screen.blit(self.text_surface, (self.rect.x, self.rect.y))
