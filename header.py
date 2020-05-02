@@ -14,13 +14,13 @@ CHALK_COLOR = (204, 204, 204)
 # app sfx, color, font, dimensions
 APP_IMG = "sfx/pin_img.png"
 APP_SOUND_EFFECT = "sfx/pin_se.wav"
-APP_COLOR = (148, 148, 148)
+APP_COLOR = (181, 11, 11)
 APP_BORDER_COLOR = (0, 0, 0)
 APP_TEXT_COLOR = (50, 50, 50)
 APP_FONT = (None, 22)
 APP_WIDTH = WIDTH//5
 APP_HEIGHT = HEIGHT//5
-# app status
+# blackboard item status
 REMOVED = 0
 SEARCHED = 1
 PINNED = 2

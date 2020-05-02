@@ -154,7 +154,7 @@ class App:
 
     def draw(self, screen):
         pg.Surface.fill(screen, self.rect_color, self.rect)
-        pg.draw.rect(screen, self.border_color, self.rect, 2)
+        pg.draw.rect(screen, self.border_color, self.rect, 1)
         screen.blit(self.icon, (self.x + APP_WIDTH//2.5, self.y + APP_HEIGHT//2.5))
         screen.blit(self.text_surface, (self.x+2, self.y + APP_HEIGHT - APP_FONT[1]))
         
@@ -168,7 +168,7 @@ class Chalk():
         self.color = pg.Color(*CHALK_COLOR)
         self.active = True
         self.text = text
-        self.x, self.y = x, y - CHALK_FONT[1]//2
+        self.x, self.y = x, y
 
         self.text_surface = self.font.render(text, True, self.color)
         self.rect = pg.Rect(self.x, self.y, self.text_surface.get_width() + 10, CHALK_FONT[1])
@@ -241,7 +241,7 @@ class BlackBoard():
         # if nothing interacted with event, and the event is a left click, add new chalk
         if not interacted and event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
             x, y = event.pos
-            self.add(('', x, y))
+            self.add(('', x, y - CHALK_FONT[1]//2))
         # instantiate any new pinned apps
         new_apps = self.searchbar.get_search_results()
         for path in new_apps:
