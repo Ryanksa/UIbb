@@ -1,3 +1,4 @@
+import pygame as pg
 from PIL import Image
 from win32com.shell import shell, shellcon
 import win32api, win32con, win32ui, win32gui, os
@@ -39,4 +40,7 @@ def get_icon(PATH, size):
 
     if size == "small":
         img = img.resize((16, 16), Image.ANTIALIAS)
-    return img
+    # convert from PIL to pygame image
+    raw = img.tobytes("raw", "RGBA")
+    icon = pg.image.frombuffer(raw, img.size, "RGBA")
+    return icon

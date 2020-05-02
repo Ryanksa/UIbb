@@ -36,7 +36,7 @@ class SearchBar:
             interacted = True
             # {ENTER} searches
             if event.key == pg.K_RETURN:
-                Thread(target=self._search, args=(self.text,)).start()
+                Thread(target=self._search, args=(self.text,), daemon=True).start()
             # {BACKSPACE} removes 1 char
             elif event.key == pg.K_BACKSPACE:
                 self.text = self.text[:-1]
@@ -54,8 +54,8 @@ class SearchBar:
     def _search(self, file):
         q = QApplication(sys.argv)
         window = SearchGUI(self.results)
+        Thread(target=window.searchItems, args=(file,), daemon=True).start()
         window.show()
-        window.searchItems(file)
         q.exec_()
 
     def get_search_results(self):
@@ -108,9 +108,7 @@ class App:
         self.border_color = pg.Color(*APP_BORDER_COLOR)
         self.text_color = pg.Color(*APP_TEXT_COLOR)
         self.img = pg.image.load(APP_IMG)
-        icon = get_icon(path, "large")
-        raw = icon.tobytes("raw", "RGBA")
-        self.icon = pg.image.frombuffer(raw, icon.size, "RGBA")
+        self.icon = get_icon(path, "large")
 
         self.rect = pg.Rect(x, y, w, h)
         self.border = pg.Rect(x-2, y-2, w, h)
