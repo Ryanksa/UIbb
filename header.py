@@ -20,6 +20,10 @@ APP_TEXT_COLOR = (50, 50, 50)
 APP_FONT = (None, 22)
 APP_WIDTH = WIDTH//5
 APP_HEIGHT = HEIGHT//5
+# options menu color and font
+OPTMENU_COLOR = (30, 30, 30)
+OPTMENU_TEXT_COLOR = (244, 244, 244)
+OPTMENU_TEXT_FONT = (None, 22)
 # blackboard item status
 REMOVED = 0
 SEARCHED = 1

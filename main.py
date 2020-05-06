@@ -10,8 +10,8 @@ def load_bb(file):
             args = line.split(',')
             if len(args) == 3:
                 ret.append((args[0], int(args[1]), int(args[2])))
-            elif len(args) == 5:
-                ret.append((args[0], int(args[1]), int(args[2]), int(args[3]), int(args[4])))
+            elif len(args) == 6:
+                ret.append((args[0], int(args[1]), int(args[2]), int(args[3]), int(args[4]), args[5][:-1]))
     return ret
 
 def save_bb(file, items):
@@ -19,9 +19,10 @@ def save_bb(file, items):
         for item in items:
             if isinstance(item, Chalk) and item.text != '':
                 args = item.text + "," + str(item.x) + "," + str(item.y) + "\n"
+                f.write(args)
             elif isinstance(item, App):
-                args = str(item.path) + "," + str(item.x) + "," + str(item.y) + "," + str(item.w) + "," + str(item.h) + "\n"
-            f.write(args)
+                args = str(item.path) + "," + str(item.x) + "," + str(item.y) + "," + str(item.w) + "," + str(item.h) + "," + item.name + "\n"
+                f.write(args)
 
 
 if __name__ == '__main__':
