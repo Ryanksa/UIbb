@@ -9,6 +9,7 @@ from utils import get_icon
 
 class SearchBar:
     def __init__(self, x, y, text):
+        # color, font, text, and various variables for this searchbar
         self.color = pg.Color(*CHALK_COLOR)
         self.font = pg.font.Font(*CHALK_FONT)
         self.default_text = text
@@ -17,7 +18,7 @@ class SearchBar:
         self.results = []
         # a text surface and a rectangle hitbox makes up a search bar
         self.text_surface = self.font.render(text, True, self.color)
-        self.rect = pg.Rect(x, y, self.text_surface.get_width() + 10, CHALK_FONT[1])
+        self.rect = pg.Rect(x, y, self.text_surface.get_width() + 10, CHALK_FONT[1] + 5)
     
     def handle_event(self, event):
         interacted = False
@@ -102,11 +103,12 @@ class SearchGUI(QDialog):
 
 
 class App:
-    def __init__(self, path, x, y, w, h, name=None):
+    def __init__(self, path, x, y, name):
         self.path = Path(path)
         self.name = self.path.name if name is None else name
         # class variables for position and movement
-        self.x, self.y, self.w, self.h = x, y, w, h
+        self.w, self.h = APP_WIDTH, APP_HEIGHT
+        self.x, self.y = x, y
         self.old_x, self.old_y = x, y
         self.offset_x, self.offset_y = 0, 0
         # class variables for state of this app
@@ -123,8 +125,8 @@ class App:
         self.icon = get_icon(path, "large")
         # instances that make up an App instance
         self.options_menu = OptionsMenu(self)
-        self.rect = pg.Rect(x, y, w, h)
-        self.border = pg.Rect(x-2, y-2, w, h)
+        self.rect = pg.Rect(x, y, self.w, self.h)
+        self.border = pg.Rect(x-2, y-2, self.w, self.h)
         self.text_surface = self.font.render(self.name, True, self.text_color)
 
     def handle_event(self, event):
@@ -139,6 +141,7 @@ class App:
                 self.renaming = False
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_RETURN:
+                    self.text_color = pg.Color(*APP_TEXT_COLOR)
                     self.renaming = False
                 elif event.key == pg.K_BACKSPACE:
                     self.name = self.name[:-1]
@@ -183,30 +186,36 @@ class App:
         # update position of rect
         self.rect.x, self.rect.y = self.x, self.y
 
-    def draw(self, screen):
+    def draw1(self, screen):
+        # draw the rectangle and its border
         pg.Surface.fill(screen, self.rect_color, self.rect)
         pg.draw.rect(screen, self.border_color, self.rect, 1)
-        screen.blit(self.icon, (self.x + APP_WIDTH//2.5, self.y + APP_HEIGHT//2.5))
+        # draw the app icon and the name
+        screen.blit(self.icon, (self.x + APP_WIDTH//3, self.y + APP_HEIGHT//3))
         screen.blit(self.text_surface, (self.x+2, self.y + APP_HEIGHT - APP_FONT[1]))
+        # draw the options menu if its open
         if self.options_opened:
             self.options_menu.draw(screen)
         
-    def draw_img(self, screen):
+    def draw2(self, screen):
         screen.blit(self.img, (self.x + APP_WIDTH//2.5, self.y-25))
 
 
 class OptionsMenu():
     def __init__(self, app):
+        # reference to the parent app
         self.app = app
+        # 2 options so far: unpin and rename
         self.unpin_opt = pg.font.Font(*OPTMENU_TEXT_FONT).render("unpin", True, OPTMENU_TEXT_COLOR)
         self.rename_opt = pg.font.Font(*OPTMENU_TEXT_FONT).render("rename", True, OPTMENU_TEXT_COLOR)
+        # rectangles for the 2 options
         w = max(self.unpin_opt.get_width(), self.rename_opt.get_width()) + 10
-        h = OPTMENU_TEXT_FONT[1] + 5
+        h = OPTMENU_TEXT_FONT[1]
         self.unpin_rect = pg.Rect(app.x, app.y, w, h)
         self.rename_rect = pg.Rect(app.x, app.y + h, w, h)
     
     def setpos(self, x, y):
-        h = OPTMENU_TEXT_FONT[1] + 5
+        h = OPTMENU_TEXT_FONT[1]
         self.unpin_rect.x, self.unpin_rect.y = x, y
         self.rename_rect.x, self.rename_rect.y = x, y + h
 
@@ -214,19 +223,26 @@ class OptionsMenu():
         interacted = False
         if event.type == pg.MOUSEBUTTONDOWN:
             interacted = True
+            # left click on unpin option
             if event.button == 1 and self.unpin_rect.collidepoint(event.pos):
                 self.app.keep = False
+            # left click on rename option
             elif event.button == 1 and self.rename_rect.collidepoint(event.pos):
+                self.app.text_color = pg.Color(*APP_HIGHLIGHTED_TEXT_COLOR)
                 self.app.renaming = True
+            # left clicking anywhere else cancels the option menu
             self.app.options_opened = False
+        # typing cancels the option menu
         elif event.type == pg.KEYDOWN:
             interacted = True
             self.app.options_opened = False
         return interacted       
 
     def draw(self, screen):
+        # draw the background of the options menu
         pg.Surface.fill(screen, OPTMENU_COLOR, self.unpin_rect)
         pg.Surface.fill(screen, OPTMENU_COLOR, self.rename_rect)
+        # draw in the indivdual options
         screen.blit(self.unpin_opt, (self.unpin_rect.x + 2, self.unpin_rect.y + 2))
         screen.blit(self.rename_opt, (self.rename_rect.x + 2, self.rename_rect.y + 2))
 
@@ -293,7 +309,7 @@ class BlackBoard():
         for args in args_list:
             if len(args) == 3:
                 self.items.append(Chalk(*args))
-            elif len(args) == 5 or len(args) == 6:
+            elif len(args) == 4:
                 self.items.append(App(*args))
         
     def handle_event(self, event):
@@ -317,12 +333,12 @@ class BlackBoard():
         # instantiate any new pinned apps
         new_apps = self.searchbar.get_search_results()
         for path in new_apps:
-            self.add((path, 50, 50, APP_WIDTH, APP_HEIGHT))
+            self.add((path, 50, 50, None))
 
     def add(self, args):
         if len(args) == 3:
             self.items.append(Chalk(*args))
-        elif len(args) == 5:
+        elif len(args) == 4:
             self.items.append(App(*args))
 
     def draw(self, screen):
@@ -339,6 +355,6 @@ class BlackBoard():
                 apps.append(item)
         # then draw the apps
         for app in apps:
-            app.draw(screen)
+            app.draw1(screen)
         for app in apps:
-            app.draw_img(screen)
+            app.draw2(screen)
