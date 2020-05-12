@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QApplication, QDialog, QListWidget, QVBoxLayout
 from pathlib import Path
 from threading import Thread
 import os, sys
+import random as r
 
 from header import *
 from utils import get_icon
@@ -104,10 +105,12 @@ class SearchGUI(QDialog):
 
 class App:
     def __init__(self, path, x, y, name):
+        # randomly choose to be Left (0) or Right (1)
+        self.lr = r.randint(0, 1)
+        # path to app (file) and name of the app
         self.path = Path(path)
         self.name = self.path.name if name is None else name
         # class variables for position and movement
-        self.w, self.h = APP_WIDTH, APP_HEIGHT
         self.x, self.y = x, y
         self.old_x, self.old_y = x, y
         self.offset_x, self.offset_y = 0, 0
@@ -118,15 +121,13 @@ class App:
         self.renaming = False
         # class variables for various font, color, and special effects
         self.font = pg.font.Font(*APP_FONT)
-        self.rect_color = pg.Color(*APP_COLOR)
-        self.border_color = pg.Color(*APP_BORDER_COLOR)
         self.text_color = pg.Color(*APP_TEXT_COLOR)
-        self.img = pg.image.load(APP_IMG)
+        self.img = pg.image.load(APP_IMG_L) if self.lr == 0 else pg.image.load(APP_IMG_R)
+        self.img_offset = LR_OFFSET[self.lr]
         self.icon = get_icon(path, "large")
         # instances that make up an App instance
         self.options_menu = OptionsMenu(self)
-        self.rect = pg.Rect(x, y, self.w, self.h)
-        self.border = pg.Rect(x-2, y-2, self.w, self.h)
+        self.rect = pg.Rect(x, y, 32, 32)
         self.text_surface = self.font.render(self.name, True, self.text_color)
 
     def handle_event(self, event):
@@ -150,7 +151,7 @@ class App:
                 else:
                     self.name += event.unicode
             self.text_surface = self.font.render(self.name, True, self.text_color)
-
+        # neither the options menu is open, nor currently renaming
         elif event.type == pg.MOUSEBUTTONDOWN:
             # start dragging
             if event.button == 1 and self.rect.collidepoint(event.pos):
@@ -187,18 +188,27 @@ class App:
         self.rect.x, self.rect.y = self.x, self.y
 
     def draw1(self, screen):
-        # draw the rectangle and its border
-        pg.Surface.fill(screen, self.rect_color, self.rect)
-        pg.draw.rect(screen, self.border_color, self.rect, 1)
-        # draw the app icon and the name
-        screen.blit(self.icon, (self.x + APP_WIDTH//3, self.y + APP_HEIGHT//3))
-        screen.blit(self.text_surface, (self.x+2, self.y + APP_HEIGHT - APP_FONT[1]))
+        """
+        draw1 draws the first layer of the app
+        First layer of one instance can be beneath/above the first layer of another instance
+        """
+        # draw the name centered just below the icon
+        text_w = self.text_surface.get_width()
+        x_offset = (text_w - 32)//2 if text_w > 32 else 0
+        screen.blit(self.text_surface, (self.x - x_offset, self.y + 27))
+        # draw the app icon
+        screen.blit(self.icon, (self.x, self.y))
         # draw the options menu if its open
         if self.options_opened:
             self.options_menu.draw(screen)
         
     def draw2(self, screen):
-        screen.blit(self.img, (self.x + APP_WIDTH//2.5, self.y-25))
+        """
+        draw2 draws the second layer of the app
+        Second layer is always on top of the first layer, but can be beneath/above the second layer of another
+        """
+        # draw the pin image
+        screen.blit(self.img, (self.x + self.img_offset[0], self.y + self.img_offset[1]))
 
 
 class OptionsMenu():
@@ -333,7 +343,9 @@ class BlackBoard():
         # instantiate any new pinned apps
         new_apps = self.searchbar.get_search_results()
         for path in new_apps:
-            self.add((path, 50, 50, None))
+            randx = r.randint(10, WIDTH//1.5)
+            randy = r.randint(10, HEIGHT//1.5)
+            self.add((path, randx, randy, None))
 
     def add(self, args):
         if len(args) == 3:
