@@ -211,12 +211,12 @@ class OptionsMenu():
         self.rename_opt = pg.font.Font(*OPTMENU_TEXT_FONT).render("rename", True, OPTMENU_TEXT_COLOR)
         # rectangles for the 2 options
         w = max(self.unpin_opt.get_width(), self.rename_opt.get_width()) + 10
-        h = OPTMENU_TEXT_FONT[1]
+        h = OPTMENU_TEXT_FONT[1] + 10
         self.unpin_rect = pg.Rect(app.x, app.y, w, h)
         self.rename_rect = pg.Rect(app.x, app.y + h, w, h)
     
     def setpos(self, x, y):
-        h = OPTMENU_TEXT_FONT[1]
+        h = OPTMENU_TEXT_FONT[1] + 10
         self.unpin_rect.x, self.unpin_rect.y = x, y
         self.rename_rect.x, self.rename_rect.y = x, y + h
 

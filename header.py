@@ -1,7 +1,7 @@
 # frames per second
 FPS = 30
 # file to save and load from
-SAVEFILE = "save.csv"
+SAVEFILE = "save/save.csv"
 
 # blackboard dimensions and colors
 WIDTH = 900
@@ -19,7 +19,7 @@ APP_RADIUS = 45
 # options menu color and font
 OPTMENU_COLOR = (30, 30, 30)
 OPTMENU_TEXT_COLOR = (244, 244, 244)
-OPTMENU_TEXT_FONT = (None, 22)
+OPTMENU_TEXT_FONT = ("sfx/OpenSans-Light.ttf", 14)
 # blackboard item status
 REMOVED = 0
 SEARCHED = 1
