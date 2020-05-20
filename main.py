@@ -49,9 +49,13 @@ if __name__ == '__main__':
             # [X] to close UIbb
             if event.type == pg.QUIT:
                 running = False
+            # resizing window
             elif event.type == pg.VIDEORESIZE:
                 screen = pg.display.set_mode((event.w, event.h), pg.RESIZABLE)
                 screen_border = pg.Rect(0, 0, event.w, event.h)
+            # {CTRL}+{S} to save
+            elif event.type == pg.KEYDOWN and event.key == pg.K_s and pg.key.get_mods() & pg.KMOD_CTRL:
+                save_bb(SAVEFILE, bb.items)
             else:
                 bb.handle_event(event)
                 

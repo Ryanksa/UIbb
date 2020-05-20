@@ -11,9 +11,10 @@ BORDER_COLOR = (150, 82, 25)
 # chalk color and font
 CHALK_FONT = ("sfx/EraserDust.ttf", 32)
 CHALK_COLOR = (244, 244, 244)
+CHALK_EDITING_COLOR = (178, 178, 178)
 # apo color, font, dimensions
 APP_TEXT_COLOR = (244, 244, 244)
-APP_HIGHLIGHTED_TEXT_COLOR = (178, 178, 178)
+APP_EDITING_TEXT_COLOR = (178, 178, 178)
 APP_FONT = ("sfx/EraserDust.ttf", 18)
 APP_RADIUS = 45
 # options menu color and font

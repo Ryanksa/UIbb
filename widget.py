@@ -30,7 +30,7 @@ class SearchBar:
                 self.active = not self.active
             else:
                 self.active = False
-            # Change the current color and text of search bar
+            # re-render the text for the search bar
             self.text = '' if self.active else self.default_text
             self.text_surface = self.font.render(self.text, True, self.color)
         # keyboard input when active
@@ -44,8 +44,11 @@ class SearchBar:
                 self.text = self.text[:-1]
             # {ESC} clears the search bar
             elif event.key == pg.K_ESCAPE:
-                self.text = ''
-                self.active = False
+                if self.text == '':
+                    self.active = False
+                    self.text = self.default_text
+                else:
+                    self.text = ''
             # typing char
             else:
                 self.text += event.unicode
@@ -227,7 +230,7 @@ class OptionsMenu():
                 self.app.keep = False
             # left click on rename option
             elif event.button == 1 and self.rename_rect.collidepoint(event.pos):
-                self.app.text_color = pg.Color(*APP_HIGHLIGHTED_TEXT_COLOR)
+                self.app.text_color = pg.Color(*APP_EDITING_TEXT_COLOR)
                 self.app.renaming = True
             # left clicking anywhere else cancels the option menu
             self.app.options_opened = False
@@ -245,15 +248,15 @@ class OptionsMenu():
 
 
 class Chalk():
-    def __init__(self, text, x, y):
+    def __init__(self, text, x, y, new):
         self.text = text
         self.old_text = text
         # class variables for font and color
         self.font = pg.font.Font(*CHALK_FONT)
-        self.color = pg.Color(*CHALK_COLOR)
+        self.color = pg.Color(*CHALK_EDITING_COLOR) if new else pg.Color(*CHALK_COLOR)
         # class variables for state of this Chalk
         self.keep = True
-        self.active = True
+        self.active = True if new else False
         self.dragging = False
         # class variables for position and movement
         self.x, self.y = x, y
@@ -270,7 +273,9 @@ class Chalk():
             interacted = True
             # {ENTER} to finish writing
             if event.key == pg.K_RETURN:
-                self.active = False if self.text == '' else True
+                self.active = False
+                self.color = pg.Color(*CHALK_COLOR)
+                self.keep = False if self.text == '' else True
             # {BACKSPACE} removes 1 char
             elif event.key == pg.K_BACKSPACE:
                 self.text = self.text[:-1]
@@ -278,6 +283,7 @@ class Chalk():
             elif event.key == pg.K_ESCAPE:
                 self.text = self.old_text
                 self.active = False
+                self.color = pg.Color(*CHALK_COLOR)
                 self.keep = False if self.text == '' else True
             # typing char
             else:
@@ -311,9 +317,12 @@ class Chalk():
                 # activate if clicked (and not dragged)
                 if self.x == self.old_x and self.y == self.old_y:
                     self.active = True
+                    self.color = pg.Color(*CHALK_EDITING_COLOR)
             # left click off chalk de-activates it
             elif event.button == 1 and not self.rect.collidepoint(event.pos):
                 self.active = False
+                self.color = pg.Color(*CHALK_COLOR)
+            self.text_surface = self.font.render(self.text, True, self.color)
         return interacted
 
     def update(self):
@@ -330,9 +339,9 @@ class BlackBoard():
         self.items = []
         for args in args_list:
             if len(args) == 3:
-                self.items.append(Chalk(*args))
+                self.add_chalk(*args, False)
             elif len(args) == 4:
-                self.items.append(App(*args))
+                self.add_app(*args)
         
     def handle_event(self, event):
         # handle event for search bar
@@ -350,19 +359,19 @@ class BlackBoard():
         # if nothing interacted with event, and the event is a left click, add new chalk
         if not interacted and event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
             x, y = event.pos
-            self.add(('', x, y - CHALK_FONT[1]//2))
+            self.add_chalk('', x, y - CHALK_FONT[1]//2, True)
         # instantiate any new pinned apps
         new_apps = self.searchbar.get_search_results()
         for path in new_apps:
             randx = r.randint(10, WIDTH//1.5)
             randy = r.randint(10, HEIGHT//1.5)
-            self.add((path, randx, randy, None))
+            self.add_app(path, randx, randy, None)
 
-    def add(self, args):
-        if len(args) == 3:
-            self.items.append(Chalk(*args))
-        elif len(args) == 4:
-            self.items.append(App(*args))
+    def add_app(self, path, x, y, name):
+        self.items.append(App(path, x, y, name))
+
+    def add_chalk(self, text, x, y, new):
+        self.items.append(Chalk(text, x, y, new))
 
     def draw(self, screen):
         # draw search bar
