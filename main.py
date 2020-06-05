@@ -8,12 +8,12 @@ def load_bb(file):
     with open(file, "r") as f:
         for line in f:
             args = line.split(',')
-            if len(args) == 3:
-                # this line contains an chalk instance, append its 3 arguments
-                ret.append((args[0], int(args[1]), int(args[2])))
-            elif len(args) == 4:
-                # this line contains an app instance, append its 6 arguments
+            if args[0].startswith("\\"):
+                # this line contains an app instance, append its arguments
                 ret.append((args[0], int(args[1]), int(args[2]), args[3].strip()))
+            else:
+                # this line contains an chalk instance, append its arguments
+                ret.append((args[0], int(args[1]), int(args[2])))
     return ret
 
 def save_bb(file, items):

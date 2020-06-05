@@ -273,6 +273,7 @@ class Chalk():
             interacted = True
             # {ENTER} to finish writing
             if event.key == pg.K_RETURN:
+                self.old_text = self.text
                 self.active = False
                 self.color = pg.Color(*CHALK_COLOR)
                 self.keep = False if self.text == '' else True
