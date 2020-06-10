@@ -39,9 +39,14 @@ class SearchBar:
             # {ENTER} searches
             if event.key == pg.K_RETURN:
                 Thread(target=self._search, args=(self.text,), daemon=True).start()
-            # {BACKSPACE} removes 1 char
+            # {BACKSPACE} removes 1 char, , or 1 word if {CTRL} is held down
             elif event.key == pg.K_BACKSPACE:
-                self.text = self.text[:-1]
+                keystates = pg.key.get_pressed()
+                if keystates[pg.K_LCTRL]:
+                    i = self.text.rstrip().rfind(" ")
+                    self.text = self.text[:i+1] if i >= 0 else ''
+                else:
+                    self.text = self.text[:-1]
             # {ESC} clears the search bar
             elif event.key == pg.K_ESCAPE:
                 if self.text == '':
@@ -139,21 +144,32 @@ class App:
         elif self.renaming:
             # currently renaming this app
             interacted = True
+            # clicking away, saves current name and stop renaming
             if event.type == pg.MOUSEBUTTONDOWN:
                 self.old_name = self.name
                 self.text_color = pg.Color(*APP_TEXT_COLOR)
                 self.renaming = False
+            # typign something while renaming
             if event.type == pg.KEYDOWN:
+                # {ENTER} saves current name and stops renaming
                 if event.key == pg.K_RETURN:
                     self.old_name = self.name
                     self.text_color = pg.Color(*APP_TEXT_COLOR)
                     self.renaming = False
+                # {BACKSPACE} removes 1 char, or 1 word if {CTRL} is held down
                 elif event.key == pg.K_BACKSPACE:
-                    self.name = self.name[:-1]
+                    keystates = pg.key.get_pressed()
+                    if keystates[pg.K_LCTRL]:
+                        i = self.name.rstrip().rfind(" ")
+                        self.name = self.name[:i+1] if i >= 0 else ''
+                    else:
+                        self.name = self.name[:-1]
+                # {ESC} reverts back to the old name
                 elif event.key == pg.K_ESCAPE:
                     self.name = self.old_name
                     self.text_color = pg.Color(*APP_TEXT_COLOR)
                     self.renaming = False
+                # else typing a char
                 else:
                     self.name += event.unicode
             self.text_surface = self.font.render(self.name, True, self.text_color)
@@ -277,10 +293,15 @@ class Chalk():
                 self.active = False
                 self.color = pg.Color(*CHALK_COLOR)
                 self.keep = False if self.text == '' else True
-            # {BACKSPACE} removes 1 char
+            # {BACKSPACE} removes 1 char, or 1 word if {CTRL} is held down
             elif event.key == pg.K_BACKSPACE:
-                self.text = self.text[:-1]
-            # {ESC} erases the chalk
+                keystates = pg.key.get_pressed()
+                if keystates[pg.K_LCTRL]:
+                    i = self.text.rstrip().rfind(" ")
+                    self.text = self.text[:i+1] if i >= 0 else ''
+                else:
+                    self.text = self.text[:-1]
+            # {ESC} reverts the chalk, or erases it altogether if its new
             elif event.key == pg.K_ESCAPE:
                 self.text = self.old_text
                 self.active = False

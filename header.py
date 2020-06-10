@@ -6,7 +6,7 @@ SAVEFILE = "save/save.csv"
 # blackboard dimensions and colors
 WIDTH = 900
 HEIGHT = 600
-BACKGROUND_COLOR = (45, 45, 45)
+BACKGROUND_COLOR = (40, 40, 40)
 BORDER_COLOR = (150, 82, 25)
 # chalk color and font
 CHALK_FONT = ("sfx/Chalktastic.ttf", 22)
