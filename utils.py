@@ -1,7 +1,7 @@
 import pygame as pg
 from PIL import Image
 from win32com.shell import shell, shellcon
-import win32api, win32con, win32ui, win32gui, os
+import win32api, win32con, win32ui, win32gui, os, math
 
 # code modified from https://stackoverflow.com/questions/21070423/
 def get_icon(PATH, size):
@@ -44,3 +44,15 @@ def get_icon(PATH, size):
     raw = img.tobytes("raw", "RGBA")
     icon = pg.image.frombuffer(raw, img.size, "RGBA")
     return icon
+
+def _dist(a, b):
+    return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
+
+def pointOnLine(point, lineStart, lineEnd):
+    d1 = _dist(lineStart, point) + _dist(point, lineEnd)
+    d2 = _dist(lineStart, lineEnd)
+    if d2 < 20:
+        err = 0.3/d2
+    else:
+        err = 0.1/d2
+    return math.isclose(d1, d2, rel_tol=err)

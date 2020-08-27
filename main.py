@@ -8,24 +8,27 @@ def load_bb(file):
     with open(file, "r") as f:
         for line in f:
             args = line.split(',,')
-            if args[0].startswith("\\"):
-                # this line contains an app instance, append its arguments
-                ret.append((args[0], int(args[1]), int(args[2]), args[3].strip()))
-            else:
-                # this line contains an chalk instance, append its arguments
-                ret.append((args[0], int(args[1]), int(args[2])))
+            ret.append(args)
     return ret
 
 def save_bb(file, items):
     with open(file, "w") as f:
         for item in items:
-            if isinstance(item, Chalk) and item.text != '':
-                # this is a valid chalk instance, write its arguments to save file
-                args = item.text + ",," + str(item.x) + ",," + str(item.y) + "\n"
+            if isinstance(item, ChalkText) and item.text != '':
+                # this is a valid ChalkText instance, write its arguments to save file
+                args = ("ChalkText,," + item.text + ",," + str(item.x) + ",," +
+                        str(item.y) + "\n")
+                f.write(args)
+            elif isinstance(item, ChalkLine):
+                # this is a valid ChalkLine instance, write its arguments to save file
+                args = ("ChalkLine,," + str(item.start_pos[0]) + ",," + 
+                        str(item.start_pos[1]) + ",," + str(item.end_pos[0]) +
+                        ",," + str(item.end_pos[1]) + "\n")
                 f.write(args)
             elif isinstance(item, App):
-                # this is a valid app instance, write its arguments to save file
-                args = str(item.path) + ",," + str(item.x) + ",," + str(item.y) + ",," + item.name + "\n"
+                # this is a valid App instance, write its arguments to save file
+                args = ("App,," + str(item.path) + ",," + str(item.x) + ",," +
+                        str(item.y) + ",," + item.name + "\n")
                 f.write(args)
 
 
@@ -54,7 +57,8 @@ if __name__ == '__main__':
                 screen = pg.display.set_mode((event.w, event.h), pg.RESIZABLE)
                 screen_border = pg.Rect(0, 0, event.w, event.h)
             # {CTRL}+{S} to save
-            elif event.type == pg.KEYDOWN and event.key == pg.K_s and pg.key.get_mods() & pg.KMOD_CTRL:
+            elif (event.type == pg.KEYDOWN and event.key == pg.K_s and
+                  pg.key.get_mods() & pg.KMOD_CTRL):
                 save_bb(SAVEFILE, bb.items)
             else:
                 bb.handle_event(event)

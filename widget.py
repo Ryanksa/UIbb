@@ -6,7 +6,7 @@ import os, sys
 import random as r
 
 from header import *
-from utils import get_icon
+from utils import get_icon, pointOnLine
 
 class SearchBar:
     def __init__(self, x, y, text):
@@ -263,14 +263,14 @@ class OptionsMenu():
         screen.blit(self.rename_opt, (self.rename_rect.x + 2, self.rename_rect.y + 2))
 
 
-class Chalk():
+class ChalkText():
     def __init__(self, text, x, y, new):
         self.text = text
         self.old_text = text
         # class variables for font and color
         self.font = pg.font.Font(*CHALK_FONT)
         self.color = pg.Color(*CHALK_EDITING_COLOR) if new else pg.Color(*CHALK_COLOR)
-        # class variables for state of this Chalk
+        # class variables for state of this ChalkText
         self.keep = True
         self.active = True if new else False
         self.dragging = False
@@ -278,7 +278,7 @@ class Chalk():
         self.x, self.y = x, y
         self.old_x, self.old_y = x, y
         self.offset_x, self.offset_y = 0, 0
-        # instances that make up a Chalk instance
+        # instances that make up a ChalkText instance
         self.text_surface = self.font.render(text, True, self.color)
         self.rect = pg.Rect(self.x, self.y, self.text_surface.get_width() + 10, CHALK_FONT[1])
 
@@ -301,7 +301,7 @@ class Chalk():
                     self.text = self.text[:i+1] if i >= 0 else ''
                 else:
                     self.text = self.text[:-1]
-            # {ESC} reverts the chalk, or erases it altogether if its new
+            # {ESC} reverts the ChalkText, or erases it altogether if its new
             elif event.key == pg.K_ESCAPE:
                 self.text = self.old_text
                 self.active = False
@@ -320,7 +320,7 @@ class Chalk():
                 mouse_x, mouse_y = event.pos
                 self.offset_x = self.x - mouse_x
                 self.offset_y = self.y - mouse_y
-            # right click to erase this Chalk
+            # right click to erase this ChalkText
             if event.button == 3 and self.rect.collidepoint(event.pos):
                 interacted = True
                 self.keep = False
@@ -340,7 +340,7 @@ class Chalk():
                 if self.x == self.old_x and self.y == self.old_y:
                     self.active = True
                     self.color = pg.Color(*CHALK_EDITING_COLOR)
-            # left click off chalk de-activates it
+            # left click off ChalkText de-activates it
             elif event.button == 1 and not self.rect.collidepoint(event.pos):
                 self.active = False
                 self.color = pg.Color(*CHALK_COLOR)
@@ -355,16 +355,66 @@ class Chalk():
         screen.blit(self.text_surface, (self.x, self.y))
 
 
+class ChalkLine:
+    def __init__(self, s_x, s_y, e_x, e_y, drawn):
+        # class variable for line position
+        self.start_pos = (s_x, s_y)
+        self.end_pos = (e_x, e_y)
+        # class variable for color and various states
+        self.color = pg.Color(*CHALK_COLOR) if drawn else pg.Color(*CHALK_EDITING_COLOR)
+        self.drawn = drawn
+        self.keep = True
+
+    def handle_event(self, event):
+        interacted = False
+        # if this ChalkLine is still not drawn yet
+        if not self.drawn:
+            # moving mouse to determine final position
+            if event.type == pg.MOUSEMOTION:
+                interacted = True
+                self.end_pos = event.pos
+            # releasing mouse to draw
+            elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
+                # if starting point is too close to ending point, no line is drawn
+                if (abs(self.start_pos[0] - self.end_pos[0]) < 5 and
+                    abs(self.start_pos[1] - self.end_pos[1]) < 5):
+                    self.keep = False
+                else:
+                    interacted = True
+                    self.drawn = True
+                    self.color = pg.Color(*CHALK_COLOR)
+        # ChalkLine drawn, right click to erase
+        else:
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == 3:
+                if pointOnLine(event.pos, self.start_pos, self.end_pos):
+                    interacted = True
+                    self.keep = False
+        return interacted
+
+    def update(self):
+        pass
+
+    def draw(self, screen):
+        pg.draw.line(screen, self.color, self.start_pos, self.end_pos, 6)
+
+
 class BlackBoard():
     def __init__(self, args_list):
+        # search bar and list of items (App/ChalkText/ChalkLine)
         self.searchbar = SearchBar(20, 15, "Search Here...")
         self.items = []
+        # class variables for instantiating ChalkText and ChalkLine
+        self.clicked = False
+        self.clicked_x, self.clicked_y = 0, 0
+        # initialize any existing items
         for args in args_list:
-            if len(args) == 3:
-                self.add_chalk(*args, False)
-            elif len(args) == 4:
-                self.add_app(*args)
-        
+            if args[0] == "ChalkText":
+                self.add_chalktext(args[1], int(args[2]), int(args[3]), False)
+            elif args[0] == "ChalkLine":
+                self.add_chalkline(int(args[1]), int(args[2]), int(args[3]), int(args[4]), True)
+            elif args[0] == "App":
+                self.add_app(args[1], int(args[2]), int(args[3]), args[4].strip())
+
     def handle_event(self, event):
         # handle event for search bar
         interacted = self.searchbar.handle_event(event)
@@ -378,10 +428,21 @@ class BlackBoard():
                 interacted = True
         for i in sorted(remove_idx, reverse=True):
             del self.items[i]
-        # if nothing interacted with event, and the event is a left click, add new chalk
-        if not interacted and event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-            x, y = event.pos
-            self.add_chalk('', x, y - CHALK_FONT[1]//2, True)
+        # if nothing interacted with event,
+        if not interacted:
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                self.clicked = True
+                self.clicked_x, self.clicked_y = event.pos
+                # and the event is a dragged left click, then add a new ChalkLine
+                x, y = pg.mouse.get_pos()
+                self.add_chalkline(self.clicked_x, self.clicked_y , x, y, False)
+            # and the event is a left click, then add a new ChalkText
+            elif event.type == pg.MOUSEBUTTONUP and self.clicked:
+                x, y = event.pos
+                if self.clicked_x == x and self.clicked_y == y:
+                    self.add_chalktext('', x, y - CHALK_FONT[1]//2, True)
+                self.clicked = False
+                self.clicked_x, self.clicked_y = 0, 0
         # instantiate any new pinned apps
         new_apps = self.searchbar.get_search_results()
         for path in new_apps:
@@ -392,8 +453,11 @@ class BlackBoard():
     def add_app(self, path, x, y, name):
         self.items.append(App(path, x, y, name))
 
-    def add_chalk(self, text, x, y, new):
-        self.items.append(Chalk(text, x, y, new))
+    def add_chalktext(self, text, x, y, new):
+        self.items.append(ChalkText(text, x, y, new))
+
+    def add_chalkline(self, s_x, s_y, e_x, e_y, drawn):
+        self.items.append(ChalkLine(s_x, s_y, e_x, e_y, drawn))
 
     def draw(self, screen):
         # draw search bar
@@ -403,7 +467,7 @@ class BlackBoard():
         apps = []
         for item in self.items:
             item.update()
-            if isinstance(item, Chalk):
+            if isinstance(item, ChalkText):
                 item.draw(screen)
             else:
                 apps.append(item)

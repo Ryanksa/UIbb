@@ -10,7 +10,7 @@ BACKGROUND_COLOR = (40, 40, 40)
 BORDER_COLOR = (150, 82, 25)
 # chalk color and font
 CHALK_FONT = ("sfx/Chalktastic.ttf", 22)
-CHALK_COLOR = (244, 244, 244)
+CHALK_COLOR = (235, 238, 236)
 CHALK_EDITING_COLOR = (178, 178, 178)
 # app color, font, dimensions
 APP_TEXT_COLOR = (244, 244, 244)
