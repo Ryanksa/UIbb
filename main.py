@@ -7,7 +7,7 @@ def load_bb(file):
     ret = []
     with open(file, "r") as f:
         for line in f:
-            args = line.split(',')
+            args = line.split(',,')
             if args[0].startswith("\\"):
                 # this line contains an app instance, append its arguments
                 ret.append((args[0], int(args[1]), int(args[2]), args[3].strip()))
@@ -21,11 +21,11 @@ def save_bb(file, items):
         for item in items:
             if isinstance(item, Chalk) and item.text != '':
                 # this is a valid chalk instance, write its arguments to save file
-                args = item.text + "," + str(item.x) + "," + str(item.y) + "\n"
+                args = item.text + ",," + str(item.x) + ",," + str(item.y) + "\n"
                 f.write(args)
             elif isinstance(item, App):
                 # this is a valid app instance, write its arguments to save file
-                args = str(item.path) + "," + str(item.x) + "," + str(item.y) + "," + item.name + "\n"
+                args = str(item.path) + ",," + str(item.x) + ",," + str(item.y) + ",," + item.name + "\n"
                 f.write(args)
 
 
