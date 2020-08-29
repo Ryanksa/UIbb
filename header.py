@@ -8,6 +8,7 @@ WIDTH = 900
 HEIGHT = 600
 BACKGROUND_COLOR = (40, 40, 40)
 BORDER_COLOR = (150, 82, 25)
+BORDER_WIDTH = 25
 # chalk color and font
 CHALK_FONT = ("sfx/Chalktastic.ttf", 22)
 CHALK_COLOR = (235, 238, 236)

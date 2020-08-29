@@ -78,6 +78,9 @@ class SearchBar:
             self.results = []
             return temp
     
+    def move(self, x, y):
+        self.rect = pg.Rect(x, y, self.text_surface.get_width() + 10, CHALK_FONT[1] + 5)
+    
     def update(self):
         # update the rectangle hitbox wrt the current text size
         self.rect.w = self.text_surface.get_width() + 10
@@ -401,7 +404,7 @@ class ChalkLine:
 class BlackBoard():
     def __init__(self, args_list):
         # search bar and list of items (App/ChalkText/ChalkLine)
-        self.searchbar = SearchBar(20, 15, "Search Here...")
+        self.searchbar = SearchBar(BORDER_WIDTH, HEIGHT-BORDER_WIDTH-CHALK_FONT[1], "Type here to search")
         self.items = []
         # class variables for instantiating ChalkText and ChalkLine
         self.clicked = False

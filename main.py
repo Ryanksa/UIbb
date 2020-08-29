@@ -35,10 +35,10 @@ def save_bb(file, items):
 if __name__ == '__main__':
     # app window
     pg.init()
-    screen = pg.display.set_mode((WIDTH+25, HEIGHT+25), pg.RESIZABLE)
-    screen_border = pg.Rect(0, 0, WIDTH+25, HEIGHT+25)
+    screen = pg.display.set_mode((WIDTH, HEIGHT), pg.RESIZABLE)
+    screen_border = pg.Rect(0, 0, WIDTH, HEIGHT)
     screen.fill(BACKGROUND_COLOR)
-    pg.draw.rect(screen, BORDER_COLOR, screen_border, 25)
+    pg.draw.rect(screen, BORDER_COLOR, screen_border, BORDER_WIDTH)
     pg.display.set_caption("UIbb")
     
     # instantiate objects
@@ -56,6 +56,7 @@ if __name__ == '__main__':
             elif event.type == pg.VIDEORESIZE:
                 screen = pg.display.set_mode((event.w, event.h), pg.RESIZABLE)
                 screen_border = pg.Rect(0, 0, event.w, event.h)
+                bb.searchbar.move(BORDER_WIDTH, event.h-BORDER_WIDTH-CHALK_FONT[1])
             # {CTRL}+{S} to save
             elif (event.type == pg.KEYDOWN and event.key == pg.K_s and
                   pg.key.get_mods() & pg.KMOD_CTRL):
@@ -65,7 +66,7 @@ if __name__ == '__main__':
                 
         # refresh screen
         screen.fill(BACKGROUND_COLOR)
-        pg.draw.rect(screen, BORDER_COLOR, screen_border, 25)
+        pg.draw.rect(screen, BORDER_COLOR, screen_border, BORDER_WIDTH)
         # re-draw blackboard
         bb.draw(screen)
         # update display
