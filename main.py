@@ -1,7 +1,8 @@
 import pygame as pg
 
 from header import *
-from widget import *
+from bb_items import *
+from blackboard import BlackBoard
 
 def load_bb(file):
     ret = []
