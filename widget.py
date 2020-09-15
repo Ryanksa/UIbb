@@ -259,6 +259,7 @@ class OptionsMenu():
         # {ESC} cancels the option menu
         elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
             self.app.options_opened = False
+        # hovering over an option changes its color
         elif event.type == pg.MOUSEMOTION:
             if self.unpin_rect.collidepoint(event.pos):
                 self.unpin_rect_color = OPTMENU_COLOR_HOVERED
@@ -380,6 +381,10 @@ class ChalkLine:
         self.color = pg.Color(*CHALK_COLOR) if drawn else pg.Color(*CHALK_EDITING_COLOR)
         self.drawn = drawn
         self.keep = True
+        # class variables used for drag and drop
+        self.dragging = False
+        self.start_offset = (0, 0)
+        self.end_offset = (0, 0)
 
     def handle_event(self, event):
         interacted = False
@@ -399,12 +404,28 @@ class ChalkLine:
                     interacted = True
                     self.drawn = True
                     self.color = pg.Color(*CHALK_COLOR)
-        # ChalkLine drawn, right click to erase
-        else:
-            if event.type == pg.MOUSEBUTTONDOWN and event.button == 3:
-                if pointOnLine(event.pos, self.start_pos, self.end_pos):
-                    interacted = True
-                    self.keep = False
+        # ChalkLine drawn, user click
+        elif event.type == pg.MOUSEBUTTONDOWN:
+            # right click to erase
+            if event.button == 3 and pointOnLine(event.pos, self.start_pos, self.end_pos):
+                interacted = True
+                self.keep = False
+            # left click to start dragging
+            elif event.button == 1 and pointOnLine(event.pos, self.start_pos, self.end_pos):
+                interacted = True
+                self.dragging = True
+                mouse_x, mouse_y = event.pos
+                self.start_offset = (self.start_pos[0] - mouse_x, self.start_pos[1] - mouse_y)
+                self.end_offset = (self.end_pos[0] - mouse_x, self.end_pos[1] - mouse_y)
+        # user continues dragging
+        elif event.type == pg.MOUSEMOTION and self.dragging:
+            mouse_x, mouse_y = event.pos
+            self.start_pos = (mouse_x + self.start_offset[0], mouse_y + self.start_offset[1])
+            self.end_pos = (mouse_x + self.end_offset[0], mouse_y + self.end_offset[1])
+        # user drops
+        elif event.type == pg.MOUSEBUTTONUP and self.dragging:
+            interacted = True
+            self.dragging = False
         return interacted
 
     def update(self):
