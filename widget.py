@@ -216,7 +216,7 @@ class App:
         # draw the name centered just below the icon
         text_w = self.text_surface.get_width()
         x_offset = (text_w - 32)//2 if text_w > 32 else 0
-        screen.blit(self.text_surface, (self.x - x_offset, self.y + 24))
+        screen.blit(self.text_surface, (self.x - x_offset, self.y + 30))
         # draw the app icon
         screen.blit(self.icon, (self.x, self.y))
         # draw the options menu if its open
@@ -236,6 +236,9 @@ class OptionsMenu():
         h = OPTMENU_TEXT_FONT[1] + 10
         self.unpin_rect = pg.Rect(app.x, app.y, w, h)
         self.rename_rect = pg.Rect(app.x, app.y + h, w, h)
+        # color of option rectangles (changes when hovered)
+        self.unpin_rect_color = OPTMENU_COLOR
+        self.rename_rect_color = OPTMENU_COLOR
     
     def setpos(self, x, y):
         h = OPTMENU_TEXT_FONT[1] + 10
@@ -253,14 +256,24 @@ class OptionsMenu():
                 self.app.renaming = True
             # left clicking anywhere else cancels the option menu
             self.app.options_opened = False
-        # typing cancels the option menu
-        elif event.type == pg.KEYDOWN:
+        # {ESC} cancels the option menu
+        elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
             self.app.options_opened = False
+        elif event.type == pg.MOUSEMOTION:
+            if self.unpin_rect.collidepoint(event.pos):
+                self.unpin_rect_color = OPTMENU_COLOR_HOVERED
+                self.rename_rect_color = OPTMENU_COLOR
+            elif self.rename_rect.collidepoint(event.pos):
+                self.rename_rect_color = OPTMENU_COLOR_HOVERED
+                self.unpin_rect_color = OPTMENU_COLOR
+            else:
+                self.unpin_rect_color = OPTMENU_COLOR
+                self.rename_rect_color = OPTMENU_COLOR
 
     def draw(self, screen):
         # draw the background of the options menu
-        pg.Surface.fill(screen, OPTMENU_COLOR, self.unpin_rect)
-        pg.Surface.fill(screen, OPTMENU_COLOR, self.rename_rect)
+        pg.Surface.fill(screen, self.unpin_rect_color, self.unpin_rect)
+        pg.Surface.fill(screen, self.rename_rect_color, self.rename_rect)
         # draw in the indivdual options
         screen.blit(self.unpin_opt, (self.unpin_rect.x + 2, self.unpin_rect.y + 2))
         screen.blit(self.rename_opt, (self.rename_rect.x + 2, self.rename_rect.y + 2))
