@@ -18,13 +18,13 @@ def save_bb(file, items):
             if isinstance(item, ChalkText) and item.text != '':
                 # this is a valid ChalkText instance, write its arguments to save file
                 args = ("ChalkText,," + item.text + ",," + str(item.x) + ",," +
-                        str(item.y) + "\n")
+                        str(item.y) + ",," + str(item.fontsize) + "\n")
                 f.write(args)
             elif isinstance(item, ChalkLine):
                 # this is a valid ChalkLine instance, write its arguments to save file
                 args = ("ChalkLine,," + str(item.start_pos[0]) + ",," + 
                         str(item.start_pos[1]) + ",," + str(item.end_pos[0]) +
-                        ",," + str(item.end_pos[1]) + "\n")
+                        ",," + str(item.end_pos[1]) + ",," + str(item.width) + "\n")
                 f.write(args)
             elif isinstance(item, App):
                 # this is a valid App instance, write its arguments to save file
@@ -57,7 +57,7 @@ if __name__ == '__main__':
             elif event.type == pg.VIDEORESIZE:
                 screen = pg.display.set_mode((event.w, event.h), pg.RESIZABLE)
                 screen_border = pg.Rect(0, 0, event.w, event.h)
-                bb.searchbar.move(BORDER_WIDTH, event.h-BORDER_WIDTH-CHALK_FONT[1])
+                bb.searchbar.move(BORDER_WIDTH, event.h-BORDER_WIDTH-CHALK_FONTSIZE)
             # {CTRL}+{S} to save
             elif (event.type == pg.KEYDOWN and event.key == pg.K_s and
                   pg.key.get_mods() & pg.KMOD_CTRL):
@@ -65,11 +65,10 @@ if __name__ == '__main__':
             else:
                 bb.handle_event(event)
                 
-        # refresh screen
-        screen.fill(BACKGROUND_COLOR)
-        pg.draw.rect(screen, BORDER_COLOR, screen_border, BORDER_WIDTH)
         # re-draw blackboard
+        screen.fill(BACKGROUND_COLOR)
         bb.draw(screen)
+        pg.draw.rect(screen, BORDER_COLOR, screen_border, BORDER_WIDTH)
         # update display
         pg.display.update()
         clock.tick(FPS)

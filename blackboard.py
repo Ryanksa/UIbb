@@ -5,7 +5,7 @@ from bb_items import *
 class BlackBoard():
     def __init__(self, args_list):
         # search bar and list of items (App/ChalkText/ChalkLine)
-        self.searchbar = SearchBar(BORDER_WIDTH, HEIGHT-BORDER_WIDTH-CHALK_FONT[1], "Type here to search")
+        self.searchbar = SearchBar(BORDER_WIDTH, HEIGHT-BORDER_WIDTH-CHALK_FONTSIZE, "Type here to search")
         self.items = []
         # class variables for instantiating ChalkText and ChalkLine
         self.clicked = False
@@ -13,38 +13,40 @@ class BlackBoard():
         # initialize any existing items
         for args in args_list:
             if args[0] == "ChalkText":
-                self.add_chalktext(args[1], int(args[2]), int(args[3]), False)
+                self.add_chalktext(args[1], int(args[2]), int(args[3]), int(args[4]), False)
             elif args[0] == "ChalkLine":
-                self.add_chalkline(int(args[1]), int(args[2]), int(args[3]), int(args[4]), True)
+                self.add_chalkline(int(args[1]), int(args[2]), int(args[3]), int(args[4]), int(args[5]), True)
             elif args[0] == "App":
                 self.add_app(args[1], int(args[2]), int(args[3]), args[4].strip())
 
     def handle_event(self, event):
         # handle event for search bar
-        interacted = self.searchbar.handle_event(event)
+        searched = self.searchbar.handle_event(event)
         # handle event for all the items on the blackboard
-        remove_idx = []
+        interacted = False
+        index = -1
         for i in range(len(self.items)):
-            item_interacted = self.items[i].handle_event(event)
-            if not self.items[i].keep:
-                remove_idx.append(i)
-            if item_interacted:
-                interacted = True
-        for i in sorted(remove_idx, reverse=True):
-            del self.items[i]
+            interacted = self.items[i].handle_event(event)
+            if interacted:
+                index = i
+                break
+        if interacted and not self.items[index].keep:
+            del self.items[index]
+        elif interacted:
+            self.items[0], self.items[index] = self.items[index], self.items[0]
         # if nothing interacted with event,
-        if not interacted:
+        if not (searched or interacted):
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 self.clicked = True
                 self.clicked_x, self.clicked_y = event.pos
                 # and the event is a dragged left click, then add a new ChalkLine
                 x, y = pg.mouse.get_pos()
-                self.add_chalkline(self.clicked_x, self.clicked_y , x, y, False)
+                self.add_chalkline(self.clicked_x, self.clicked_y , x, y, 6, False)
             # and the event is a left click, then add a new ChalkText
             elif event.type == pg.MOUSEBUTTONUP and self.clicked:
                 x, y = event.pos
                 if self.clicked_x == x and self.clicked_y == y:
-                    self.add_chalktext('', x, y - CHALK_FONT[1]//2, True)
+                    self.add_chalktext('', x, y - CHALK_FONTSIZE//2, CHALK_FONTSIZE, True)
                 self.clicked = False
                 self.clicked_x, self.clicked_y = 0, 0
         # instantiate any new pinned apps
@@ -57,24 +59,17 @@ class BlackBoard():
     def add_app(self, path, x, y, name):
         self.items.append(App(path, x, y, name))
 
-    def add_chalktext(self, text, x, y, new):
-        self.items.append(ChalkText(text, x, y, new))
+    def add_chalktext(self, text, x, y, fontsize, new):
+        self.items.append(ChalkText(text, x, y, fontsize, new))
 
-    def add_chalkline(self, s_x, s_y, e_x, e_y, drawn):
-        self.items.append(ChalkLine(s_x, s_y, e_x, e_y, drawn))
+    def add_chalkline(self, s_x, s_y, e_x, e_y, width, drawn):
+        self.items.append(ChalkLine(s_x, s_y, e_x, e_y, width, drawn))
 
     def draw(self, screen):
         # draw search bar
         self.searchbar.update()
         self.searchbar.draw(screen)
-        # draw all the chalks first
-        apps = []
-        for item in self.items:
+        # draw the rest of the items
+        for item in reversed(self.items):
             item.update()
-            if isinstance(item, ChalkText):
-                item.draw(screen)
-            else:
-                apps.append(item)
-        # then draw the apps
-        for app in apps:
-            app.draw(screen)
+            item.draw(screen)
