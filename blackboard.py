@@ -13,11 +13,11 @@ class BlackBoard():
         # initialize any existing items
         for args in args_list:
             if args[0] == "ChalkText":
-                self.add_chalktext(args[1], int(args[2]), int(args[3]), int(args[4]), False)
+                self.add_chalktext(args[1], int(args[2]), int(args[3]), int(args[4]), int(args[5]), False)
             elif args[0] == "ChalkLine":
-                self.add_chalkline(int(args[1]), int(args[2]), int(args[3]), int(args[4]), int(args[5]), True)
+                self.add_chalkline(int(args[1]), int(args[2]), int(args[3]), int(args[4]), int(args[5]), int(args[6]), True)
             elif args[0] == "App":
-                self.add_app(args[1], int(args[2]), int(args[3]), args[4].strip())
+                self.add_app(args[1], int(args[2]), int(args[3]), int(args[4]), args[5].strip())
 
     def handle_event(self, event):
         # handle event for search bar
@@ -41,12 +41,12 @@ class BlackBoard():
                 self.clicked_x, self.clicked_y = event.pos
                 # and the event is a dragged left click, then add a new ChalkLine
                 x, y = pg.mouse.get_pos()
-                self.add_chalkline(self.clicked_x, self.clicked_y , x, y, 6, False)
+                self.add_chalkline(self.clicked_x, self.clicked_y , x, y, 6, WHITE, False)
             # and the event is a left click, then add a new ChalkText
             elif event.type == pg.MOUSEBUTTONUP and self.clicked:
                 x, y = event.pos
                 if self.clicked_x == x and self.clicked_y == y:
-                    self.add_chalktext('', x, y - CHALK_FONTSIZE//2, CHALK_FONTSIZE, True)
+                    self.add_chalktext('', x, y - CHALK_FONTSIZE//2, CHALK_FONTSIZE, WHITE, True)
                 self.clicked = False
                 self.clicked_x, self.clicked_y = 0, 0
         # instantiate any new pinned apps
@@ -54,16 +54,16 @@ class BlackBoard():
         for path in new_apps:
             randx = r.randint(10, WIDTH//1.5)
             randy = r.randint(10, HEIGHT//1.5)
-            self.add_app(path, randx, randy, None)
+            self.add_app(path, randx, randy, WHITE, None)
 
-    def add_app(self, path, x, y, name):
-        self.items.append(App(path, x, y, name))
+    def add_app(self, path, x, y, color, name):
+        self.items.append(App(path, x, y, color, name))
 
-    def add_chalktext(self, text, x, y, fontsize, new):
-        self.items.append(ChalkText(text, x, y, fontsize, new))
+    def add_chalktext(self, text, x, y, fontsize, color, new):
+        self.items.append(ChalkText(text, x, y, fontsize, color, new))
 
-    def add_chalkline(self, s_x, s_y, e_x, e_y, width, drawn):
-        self.items.append(ChalkLine(s_x, s_y, e_x, e_y, width, drawn))
+    def add_chalkline(self, s_x, s_y, e_x, e_y, width, color, drawn):
+        self.items.append(ChalkLine(s_x, s_y, e_x, e_y, width, color, drawn))
 
     def draw(self, screen):
         # draw search bar

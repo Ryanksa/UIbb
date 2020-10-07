@@ -12,11 +12,7 @@ BORDER_WIDTH = 25
 # chalk color and font
 CHALK_FONT = "sfx/Chalktastic.ttf"
 CHALK_FONTSIZE = 22
-CHALK_COLOR = (235, 238, 236)
-CHALK_EDITING_COLOR = (178, 178, 178)
 # app color, font, dimensions
-APP_TEXT_COLOR = (244, 244, 244)
-APP_EDITING_TEXT_COLOR = (178, 178, 178)
 APP_FONT = "sfx/Chalktastic.ttf"
 APP_FONTSIZE = 12
 APP_RADIUS = 45
@@ -26,7 +22,13 @@ OPTMENU_COLOR_HOVERED = (130, 130, 130)
 OPTMENU_TEXT_COLOR = (244, 244, 244)
 OPTMENU_FONT = "sfx/OpenSans-Light.ttf"
 OPTMENU_FONTSIZE = 14
-# blackboard item status
-REMOVED = 0
-SEARCHED = 1
-PINNED = 2
+# color palette for blackboard items
+COLOR_PAL = [(219,96,93), (230,131,43), (248,221,93), (235, 238, 236), (99,164,108), (155,209,229)]
+NUM_COLORS = len(COLOR_PAL)
+RED = 0
+ORANGE = 1
+YELLOW = 2
+WHITE = 3
+GREEN = 4
+BLUE = 5
+EDITING_COLOR = (178, 178, 178)

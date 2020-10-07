@@ -17,19 +17,19 @@ def save_bb(file, items):
         for item in items:
             if isinstance(item, ChalkText) and item.text != '':
                 # this is a valid ChalkText instance, write its arguments to save file
-                args = ("ChalkText,," + item.text + ",," + str(item.x) + ",," +
-                        str(item.y) + ",," + str(item.fontsize) + "\n")
+                args = ("ChalkText,," + item.text + ",," + str(item.x) + ",," + str(item.y)
+                        + ",," + str(item.fontsize) + ",," + str(item.color_idx) + "\n")
                 f.write(args)
             elif isinstance(item, ChalkLine):
                 # this is a valid ChalkLine instance, write its arguments to save file
-                args = ("ChalkLine,," + str(item.start_pos[0]) + ",," + 
-                        str(item.start_pos[1]) + ",," + str(item.end_pos[0]) +
-                        ",," + str(item.end_pos[1]) + ",," + str(item.width) + "\n")
+                args = ("ChalkLine,," + str(item.start_pos[0]) + ",," + str(item.start_pos[1])
+                        + ",," + str(item.end_pos[0]) + ",," + str(item.end_pos[1]) + ",," +
+                        str(item.width) + ",," + str(item.color_idx) + "\n")
                 f.write(args)
             elif isinstance(item, App):
                 # this is a valid App instance, write its arguments to save file
                 args = ("App,," + str(item.path) + ",," + str(item.x) + ",," +
-                        str(item.y) + ",," + item.name + "\n")
+                        str(item.y) + ",," + str(item.color_idx) + ",," + item.name + "\n")
                 f.write(args)
 
 

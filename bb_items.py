@@ -7,7 +7,7 @@ from utils import get_icon, pointOnLine
 from widgets import *
 
 class App:
-    def __init__(self, path, x, y, name):
+    def __init__(self, path, x, y, color, name):
         # path to app (file) and name of the app
         self.path = Path(path)
         self.name = self.path.name if name is None else name
@@ -23,7 +23,8 @@ class App:
         self.renaming = False
         # class variables for various font, color, and special effects
         self.font = pg.font.Font(APP_FONT, APP_FONTSIZE)
-        self.text_color = pg.Color(*APP_TEXT_COLOR)
+        self.color_idx = color
+        self.text_color = pg.Color(*COLOR_PAL[color])
         self.icon = get_icon(path, "large")
         # instances that make up an App instance
         self.options_menu = AppOptionsMenu(self)
@@ -41,14 +42,14 @@ class App:
             # clicking away, saves current name and stop renaming
             if event.type == pg.MOUSEBUTTONDOWN:
                 self.old_name = self.name
-                self.text_color = pg.Color(*APP_TEXT_COLOR)
+                self.text_color = pg.Color(*COLOR_PAL[self.color_idx])
                 self.renaming = False
             # typing something while renaming
             if event.type == pg.KEYDOWN:
                 # {ENTER} saves current name and stops renaming
                 if event.key == pg.K_RETURN:
                     self.old_name = self.name
-                    self.text_color = pg.Color(*APP_TEXT_COLOR)
+                    self.text_color = pg.Color(*COLOR_PAL[self.color_idx])
                     self.renaming = False
                 # {BACKSPACE} removes 1 char, or 1 word if {CTRL} is held down
                 elif event.key == pg.K_BACKSPACE:
@@ -61,7 +62,7 @@ class App:
                 # {ESC} reverts back to the old name
                 elif event.key == pg.K_ESCAPE:
                     self.name = self.old_name
-                    self.text_color = pg.Color(*APP_TEXT_COLOR)
+                    self.text_color = pg.Color(*COLOR_PAL[self.color_idx])
                     self.renaming = False
                 # else typing a char
                 else:
@@ -115,13 +116,14 @@ class App:
 
 
 class ChalkText():
-    def __init__(self, text, x, y, fontsize, new):
+    def __init__(self, text, x, y, fontsize, color, new):
         self.text = text
         self.old_text = text
         # class variables for font and color
         self.fontsize = fontsize
         self.font = pg.font.Font(CHALK_FONT, self.fontsize)
-        self.color = pg.Color(*CHALK_EDITING_COLOR) if new else pg.Color(*CHALK_COLOR)
+        self.color_idx = color
+        self.color = pg.Color(*EDITING_COLOR) if new else pg.Color(*COLOR_PAL[color])
         # class variables for state of this ChalkText
         self.keep = True
         self.active = True if new else False
@@ -149,7 +151,7 @@ class ChalkText():
             if event.key == pg.K_RETURN:
                 self.old_text = self.text
                 self.active = False
-                self.color = pg.Color(*CHALK_COLOR)
+                self.color = pg.Color(*COLOR_PAL[self.color_idx])
                 self.keep = False if self.text == '' else True
             # {BACKSPACE} removes 1 char, or 1 word if {CTRL} is held down
             elif event.key == pg.K_BACKSPACE:
@@ -163,7 +165,7 @@ class ChalkText():
             elif event.key == pg.K_ESCAPE:
                 self.text = self.old_text
                 self.active = False
-                self.color = pg.Color(*CHALK_COLOR)
+                self.color = pg.Color(*COLOR_PAL[self.color_idx])
                 self.keep = False if self.text == '' else True
             # typing char
             else:
@@ -198,11 +200,11 @@ class ChalkText():
                 # activate if clicked (and not dropped)
                 if self.x == self.old_x and self.y == self.old_y:
                     self.active = True
-                    self.color = pg.Color(*CHALK_EDITING_COLOR)
+                    self.color = pg.Color(*EDITING_COLOR)
             # left click off ChalkText de-activates it
             elif event.button == 1 and not self.rect.collidepoint(event.pos):
                 self.active = False
-                self.color = pg.Color(*CHALK_COLOR)
+                self.color = pg.Color(*COLOR_PAL[self.color_idx])
             self.text_surface = self.font.render(self.text, True, self.color)
         return interacted
 
@@ -219,12 +221,13 @@ class ChalkText():
 
 
 class ChalkLine:
-    def __init__(self, s_x, s_y, e_x, e_y, width, drawn):
+    def __init__(self, s_x, s_y, e_x, e_y, width, color, drawn):
         # class variable for line position
         self.start_pos = (s_x, s_y)
         self.end_pos = (e_x, e_y)
         # class variable for color and various states
-        self.color = pg.Color(*CHALK_COLOR) if drawn else pg.Color(*CHALK_EDITING_COLOR)
+        self.color_idx = color
+        self.color = pg.Color(*COLOR_PAL[color]) if drawn else pg.Color(*EDITING_COLOR)
         self.drawn = drawn
         self.keep = True
         self.width = width
@@ -281,7 +284,7 @@ class ChalkLine:
                     self.keep = False
                 else:
                     self.drawn = True
-                    self.color = pg.Color(*CHALK_COLOR)
+                    self.color = pg.Color(*COLOR_PAL[self.color_idx])
         return interacted
 
     def update(self):

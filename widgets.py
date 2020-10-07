@@ -2,14 +2,14 @@ import pygame as pg
 from PyQt5.QtWidgets import QApplication, QDialog, QListWidget, QVBoxLayout
 from pathlib import Path
 from threading import Thread
-import sys
+import sys, os
 
 from header import *
 
 class SearchBar:
     def __init__(self, x, y, text):
         # color, font, text, and various variables for this searchbar
-        self.color = pg.Color(*CHALK_COLOR)
+        self.color = pg.Color(*COLOR_PAL[WHITE])
         self.font = pg.font.Font(CHALK_FONT, CHALK_FONTSIZE)
         self.default_text = text
         self.text = text
@@ -131,7 +131,7 @@ class OptionsMenu():
             self.p.options_opened = False
         # hovering over an option changes its color
         elif event.type == pg.MOUSEMOTION:
-            for i in range(len(self.options)):
+            for i in range(len(self.opt_rects)):
                 if self.opt_rects[i].collidepoint(event.pos):
                     self.rect_colors[i] = OPTMENU_COLOR_HOVERED
                 else:
@@ -139,7 +139,7 @@ class OptionsMenu():
 
     def draw(self, screen):
         # draw the background of the options menu
-        for i in range(len(self.options)):
+        for i in range(len(self.opt_rects)):
             pg.Surface.fill(screen, self.rect_colors[i], self.opt_rects[i])
         # draw in the indivdual options
         for i in range(len(self.options)):
@@ -149,35 +149,53 @@ class OptionsMenu():
 class AppOptionsMenu(OptionsMenu):
     def __init__(self, app):
         super().__init__(app)
-        # 2 options: unpin and rename
+        # 4 options: launch, remove, rename, color
         self.options.append(
-            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("unpin", True, OPTMENU_TEXT_COLOR))
+            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("Launch", True, OPTMENU_TEXT_COLOR))
         self.options.append(
-            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("rename", True, OPTMENU_TEXT_COLOR))
+            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("Remove", True, OPTMENU_TEXT_COLOR))
+        self.options.append(
+            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("Rename", True, OPTMENU_TEXT_COLOR))
+        self.options.append(
+            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("Color >>", True, pg.Color(*COLOR_PAL[self.p.color_idx])))
         # rectangles for the options
-        w = max(self.options[0].get_width(), self.options[1].get_width()) + 10
+        w = self.options[3].get_width() + 10
         h = OPTMENU_FONTSIZE + 10
         for i in range(len(self.options)):
-            self.opt_rects.append(pg.Rect(app.x, app.y + i*h, w, h))
+            self.opt_rects.append(pg.Rect(0, 0, w, h))
         # color of option rectangles (changes when hovered)
-        self.rect_colors = [OPTMENU_COLOR] * len(self.options)
+        self.rect_colors = [OPTMENU_COLOR] * len(self.opt_rects)
 
     def setpos(self, x, y):
         super().setpos(x, y)
 
     def handle_event(self, event):
         if event.type == pg.MOUSEBUTTONUP and event.button == 1:
-            # click on unpin option
+            # click on launch option
             if self.opt_rects[0].collidepoint(event.pos):
+                os.startfile(self.p.path)
+                self.p.options_opened = False
+            # click on remove option
+            if self.opt_rects[1].collidepoint(event.pos):
                 self.p.keep = False
+                self.p.options_opened = False
             # click on rename option
-            elif self.opt_rects[1].collidepoint(event.pos):
-                self.p.text_color = pg.Color(*APP_EDITING_TEXT_COLOR)
+            elif self.opt_rects[2].collidepoint(event.pos):
+                self.p.text_color = pg.Color(*EDITING_COLOR)
                 self.p.renaming = True
-            # selecting an option (or clicking elsewhere) closes this options menu
-            self.p.options_opened = False
+                self.p.text_surface = self.p.font.render(self.p.name, True, self.p.text_color)
+                self.p.options_opened = False
+            # click on color >>
+            elif self.opt_rects[3].collidepoint(event.pos):
+                self.p.color_idx = (self.p.color_idx + 1) % NUM_COLORS
+                self.p.text_color = pg.Color(*COLOR_PAL[self.p.color_idx])
+                self.options[3] = pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("Color >>", True, self.p.text_color)
+                self.p.text_surface = self.p.font.render(self.p.name, True, self.p.text_color)
+            # clicking anywhere else closes this options menu
+            else:
+                self.p.options_opened = False
         super().handle_event(event)
-    
+
     def draw(self, screen):
         super().draw(screen)
 
@@ -185,25 +203,32 @@ class AppOptionsMenu(OptionsMenu):
 class ChalkTextOptionsMenu(OptionsMenu):
     def __init__(self, chalkText):
         super().__init__(chalkText)
-        # 4 options: erase, edit, size+, size-
+        # 4 options: erase, edit, color, size
         self.options.append(
-            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("erase", True, OPTMENU_TEXT_COLOR))
+            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("Erase", True, OPTMENU_TEXT_COLOR))
         self.options.append(
-            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("edit", True, OPTMENU_TEXT_COLOR))
+            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("Edit", True, OPTMENU_TEXT_COLOR))
         self.options.append(
-            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("size+", True, OPTMENU_TEXT_COLOR))
+            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("Color >>", True, pg.Color(*COLOR_PAL[self.p.color_idx])))
         self.options.append(
-            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("size-", True, OPTMENU_TEXT_COLOR))
+            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("- Size +", True, OPTMENU_TEXT_COLOR))
         # rectangles for the options
-        w = max(self.options[0].get_width(), self.options[1].get_width(), self.options[2].get_width()) + 10
+        w = self.options[2].get_width() + 10
         h = OPTMENU_FONTSIZE + 10
         for i in range(len(self.options)):
-            self.opt_rects.append(pg.Rect(chalkText.x, chalkText.y + i*h, w, h))
+            self.opt_rects.append(pg.Rect(0, 0, w, h))
+        # special setup for size option
+        self.opt_rects[-1].width = w//2
+        self.opt_rects.append(pg.Rect(0, 0, w//2, h))
+        self.w = w
         # color of option rectangles (changes when hovered)
-        self.rect_colors = [OPTMENU_COLOR] * len(self.options)
+        self.rect_colors = [OPTMENU_COLOR] * len(self.opt_rects)
     
     def setpos(self, x, y):
         super().setpos(x, y)
+        # special setup for size option
+        x, y = self.opt_rects[-2].x + self.w//2, self.opt_rects[-2].y
+        self.opt_rects[-1].x, self.opt_rects[-1].y = x, y
 
     def handle_event(self, event):
         if event.type == pg.MOUSEBUTTONUP and event.button == 1:
@@ -214,20 +239,26 @@ class ChalkTextOptionsMenu(OptionsMenu):
             # click on edit option
             elif self.opt_rects[1].collidepoint(event.pos):
                 self.p.active = True
-                self.p.color = pg.Color(*CHALK_EDITING_COLOR)
+                self.p.color = pg.Color(*EDITING_COLOR)
                 self.p.text_surface = self.p.font.render(self.p.text, True, self.p.color)
                 self.p.options_opened = False
-            # click on size+
+            # click on color >>
             elif self.opt_rects[2].collidepoint(event.pos):
-                self.p.fontsize += 2
-                self.p.font = pg.font.Font(CHALK_FONT, self.p.fontsize)
-                self.p.text_surface = self.p.font.render(self.p.text, True, self.p.color)
-            # click on size-
+                self.p.color_idx = (self.p.color_idx + 1) % NUM_COLORS
+                self.p.color = pg.Color(*COLOR_PAL[self.p.color_idx])
+                self.options[2] = pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("Color >>", True, self.p.color)
+                self.p.text_surface = self.p.font.render(self.p.text, True, self.p.color)                
+            # click on size -
             elif self.opt_rects[3].collidepoint(event.pos):
                 if self.p.fontsize > 2:
                     self.p.fontsize -= 2
                     self.p.font = pg.font.Font(CHALK_FONT, self.p.fontsize)
                     self.p.text_surface = self.p.font.render(self.p.text, True, self.p.color)
+            # click on size +
+            elif self.opt_rects[4].collidepoint(event.pos):
+                self.p.fontsize += 2
+                self.p.font = pg.font.Font(CHALK_FONT, self.p.fontsize)
+                self.p.text_surface = self.p.font.render(self.p.text, True, self.p.color)
             # clicking anywhere else closes this options menu
             else:
                 self.p.options_opened = False
@@ -240,25 +271,32 @@ class ChalkTextOptionsMenu(OptionsMenu):
 class ChalkLineOptionsMenu(OptionsMenu):
     def __init__(self, chalkLine):
         super().__init__(chalkLine)
-        # 4 options: erase, adjust, width+, width-
+        # 4 options: erase, adjust, color, size
         self.options.append(
-            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("erase", True, OPTMENU_TEXT_COLOR))
+            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("Erase", True, OPTMENU_TEXT_COLOR))
         self.options.append(
-            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("adjust", True, OPTMENU_TEXT_COLOR))
+            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("Adjust", True, OPTMENU_TEXT_COLOR))
         self.options.append(
-            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("width+", True, OPTMENU_TEXT_COLOR))
+            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("Color >>", True, pg.Color(*COLOR_PAL[self.p.color_idx])))
         self.options.append(
-            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("width-", True, OPTMENU_TEXT_COLOR))
+            pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("- Size +", True, OPTMENU_TEXT_COLOR))
         # rectangles for the options
-        w = max(self.options[0].get_width(), self.options[1].get_width(), self.options[2].get_width()) + 10
+        w = self.options[2].get_width() + 10
         h = OPTMENU_FONTSIZE + 10
         for i in range(len(self.options)):
-            self.opt_rects.append(pg.Rect(chalkLine.start_pos[0], chalkLine.start_pos[1] + i*h, w, h))
+            self.opt_rects.append(pg.Rect(0, 0, w, h))
+        # special setup for size option
+        self.opt_rects[-1].width = w//2
+        self.opt_rects.append(pg.Rect(0, 0, w//2, h))
+        self.w = w
         # color of option rectangles (changes when hovered)
-        self.rect_colors = [OPTMENU_COLOR] * len(self.options)
+        self.rect_colors = [OPTMENU_COLOR] * len(self.opt_rects)
 
     def setpos(self, x, y):
         super().setpos(x, y)
+        # special setup for size option
+        x, y = self.opt_rects[-2].x + self.w//2, self.opt_rects[-2].y
+        self.opt_rects[-1].x, self.opt_rects[-1].y = x, y
 
     def handle_event(self, event):
         if event.type == pg.MOUSEBUTTONUP and event.button == 1:
@@ -269,15 +307,20 @@ class ChalkLineOptionsMenu(OptionsMenu):
             # click on adjust option
             elif self.opt_rects[1].collidepoint(event.pos):
                 self.p.drawn = False
-                self.p.color = pg.Color(*CHALK_EDITING_COLOR)
+                self.p.color = pg.Color(*EDITING_COLOR)
                 self.p.options_opened = False
-            # click on width+
+            # click on color >>
             elif self.opt_rects[2].collidepoint(event.pos):
-                self.p.width += 1
-            # click on width-
+                self.p.color_idx = (self.p.color_idx + 1) % NUM_COLORS
+                self.p.color = pg.Color(*COLOR_PAL[self.p.color_idx])
+                self.options[2] = pg.font.Font(OPTMENU_FONT, OPTMENU_FONTSIZE).render("Color >>", True, self.p.color)
+            # click on size -
             elif self.opt_rects[3].collidepoint(event.pos):
                 if self.p.width > 1:
                     self.p.width -= 1
+            # click on size +
+            elif self.opt_rects[4].collidepoint(event.pos):
+                self.p.width += 1
             # clicking anywhere else closes this options menu
             else:
                 self.p.options_opened = False
