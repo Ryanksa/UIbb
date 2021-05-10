@@ -12,4 +12,4 @@ to install all the python libaries needed. Then run:
 
 ### python main.py
 
-to start the applciation.
+to start the application.
