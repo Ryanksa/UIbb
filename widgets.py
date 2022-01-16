@@ -97,6 +97,8 @@ class SearchGUI(QDialog):
         # contains a list widget to display the search results
         self.list_widget = QListWidget()
         self.list_widget.setStyleSheet("color: rgb(211, 211, 211);")
+        self.list_widget.setFixedHeight(600)
+        self.list_widget.setMinimumWidth(400)
         self.list_widget.itemDoubleClicked.connect(self.addAndReturn)
         # list widget sits on top of layout
         layout = QVBoxLayout(self)

@@ -10,6 +10,7 @@ class BlackBoard():
         # class variables for instantiating ChalkText and ChalkLine
         self.clicked = False
         self.clicked_x, self.clicked_y = 0, 0
+        self.default_color = WHITE
         # initialize any existing items
         for args in args_list:
             if args[0] == "ChalkText":
@@ -34,6 +35,8 @@ class BlackBoard():
             del self.items[index]
         elif interacted:
             self.items[0], self.items[index] = self.items[index], self.items[0]
+            self.default_color = self.items[0].color_idx
+
         # if nothing interacted with event,
         if not (searched or interacted):
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
@@ -41,12 +44,12 @@ class BlackBoard():
                 self.clicked_x, self.clicked_y = event.pos
                 # and the event is a dragged left click, then add a new ChalkLine
                 x, y = pg.mouse.get_pos()
-                self.add_chalkline(self.clicked_x, self.clicked_y , x, y, 6, WHITE, False)
+                self.add_chalkline(self.clicked_x, self.clicked_y , x, y, 6, self.default_color, False)
             # and the event is a left click, then add a new ChalkText
             elif event.type == pg.MOUSEBUTTONUP and self.clicked:
                 x, y = event.pos
                 if self.clicked_x == x and self.clicked_y == y:
-                    self.add_chalktext('', x, y - CHALK_FONTSIZE//2, CHALK_FONTSIZE, WHITE, True)
+                    self.add_chalktext('', x, y - CHALK_FONTSIZE//2, CHALK_FONTSIZE, self.default_color, True)
                 self.clicked = False
                 self.clicked_x, self.clicked_y = 0, 0
         # instantiate any new pinned apps
@@ -54,7 +57,7 @@ class BlackBoard():
         for path in new_apps:
             randx = r.randint(10, WIDTH//1.5)
             randy = r.randint(10, HEIGHT//1.5)
-            self.add_app(path, randx, randy, WHITE, None)
+            self.add_app(path, randx, randy, self.default_color, None)
 
     def add_app(self, path, x, y, color, name):
         self.items.append(App(path, x, y, color, name))
