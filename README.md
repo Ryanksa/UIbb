@@ -1,8 +1,8 @@
-# Project: UIbb
+# UIbb
 
 ## Description and Preview
 
-A re-imagined desktop environment
+A re-imagined desktop environment.
 
 ![demo image](./img/demo.png)
 
